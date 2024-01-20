@@ -148,7 +148,7 @@ class Rtc_Pcf8563 {
         /* date supports 3 styles as listed in the wikipedia page about world date/time. */
         char *formatDate(byte style=RTCC_DATE_US);
 
-        char *version();
+        const char *version();
         
     private:
         /* methods */

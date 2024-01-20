@@ -376,7 +376,7 @@ void Rtc_Pcf8563::getTime()
     hour = bcdToDec(Wire.receive() & 0x3f);
 }
 
-char *Rtc_Pcf8563::version(){
+const char *Rtc_Pcf8563::version(){
   return RTCC_VERSION;  
 }
 
