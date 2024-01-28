@@ -353,39 +353,13 @@ void Rtc_Pcf8563::clearAlarm()
     Wire.send(status2);
     Wire.endTransmission();
 }
-/**
- * @brief call this first to load current date values to variables
- *
- */
-void Rtc_Pcf8563::getDate()
-{
-    /* set the start byte of the date data */
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_DAY_ADDR);
-    Wire.endTransmission();
 
-    Wire.requestFrom(Rtcc_Addr, 4); // request 4 bytes
-    // 0x3f = 0b00111111
-    day = bcdToDec(Wire.receive() & 0x3f);
-    // 0x07 = 0b00000111
-    weekday = bcdToDec(Wire.receive() & 0x07);
-    // get raw month data byte and set month and century with it.
-    month = Wire.receive();
-    if (month & RTCC_CENTURY_MASK) {
-        century = 1;
-    } else {
-        century = 0;
-    }
-    // 0x1f = 0b00011111
-    month = month & 0x1f;
-    month = bcdToDec(month);
-    year = bcdToDec(Wire.receive());
-}
 /**
- * @brief call this first to load current time values to variables
+ * @brief Load time and date
+ * @return pcfTime -> struct containing time and date
  *
  */
-void Rtc_Pcf8563::getTime()
+pcfTime Rtc_Pcf8563::getTimeDate()
 {
     /* set the start byte , get the 2 status bytes */
     Wire.beginTransmission(Rtcc_Addr);
@@ -396,10 +370,33 @@ void Rtc_Pcf8563::getTime()
     status1 = Wire.receive();
     status2 = Wire.receive();
     // 0x7f = 0b01111111
-    sec = bcdToDec(Wire.receive() & 0x7f);
-    minute = bcdToDec(Wire.receive() & 0x7f);
+    time.Second = bcdToDec(Wire.receive() & 0x7f);
+    time.Minute = bcdToDec(Wire.receive() & 0x7f);
     // 0x3f = 0b00111111
-    hour = bcdToDec(Wire.receive() & 0x3f);
+    time.Hour = bcdToDec(Wire.receive() & 0x3f);
+
+    Wire.beginTransmission(Rtcc_Addr);
+    Wire.send(RTCC_DAY_ADDR);
+    Wire.endTransmission();
+
+    Wire.requestFrom(Rtcc_Addr, 4); // request 4 bytes
+    // 0x3f = 0b00111111
+    time.Day = bcdToDec(Wire.receive() & 0x3f);
+    // 0x07 = 0b00000111
+    time.Weekday = bcdToDec(Wire.receive() & 0x07);
+    // get raw month data byte and set month and century with it.
+    time.Month = Wire.receive();
+    if (month & RTCC_CENTURY_MASK) {
+        century = 1;
+    } else {
+        century = 0;
+    }
+    // 0x1f = 0b00011111
+    time.Month = month & 0x1f;
+    time.Month = bcdToDec(month);
+    time.Year = bcdToDec(Wire.receive());
+
+    return time;
 }
 
 /**
@@ -522,37 +519,6 @@ char* Rtc_Pcf8563::formatDate(byte style)
 }
 
 /**
- * @brief get seconds, needs getTime() to be called before
- *
- * @return byte -> seconds from 0 to 59
- */
-byte Rtc_Pcf8563::getSecond()
-{
-    return sec;
-}
-
-/**
- * @brief get minutes, needs getTime() to be called before
- *
- * @return byte -> minutes from 0 to 59
- */
-byte Rtc_Pcf8563::getMinute()
-{
-    return minute;
-}
-
-/**
- * @brief get hour, needs getTime() to be called before
- *
- * @return byte -> hours from 0 to 23
- */
-byte Rtc_Pcf8563::getHour()
-{
-    getTime();
-    return hour;
-}
-
-/**
  * @brief get alarm minute, needs getAlarm() to be called before
  *
  * @return byte -> minute from 0 to 59
@@ -593,47 +559,7 @@ byte Rtc_Pcf8563::getAlarmWeekday()
 }
 
 /**
- * @brief get day, needs getDate() to be called before
- *
- * @return byte -> day from 1 to 31
- */
-byte Rtc_Pcf8563::getDay()
-{
-    return day;
-}
-
-/**
- * @brief get month, needs getDate() to be called before
- *
- * @return byte -> month from 1 to 12
- */
-byte Rtc_Pcf8563::getMonth()
-{
-    return month;
-}
-
-/**
- * @brief get year, needs getDate() to be called before.
- *
- * @return byte -> day from 0 to 99
- */
-byte Rtc_Pcf8563::getYear()
-{
-    return year;
-}
-
-/**
- * @brief get weekday, needs getDate() to be called before
- *
- * @return byte -> day from 0 to 6
- */
-byte Rtc_Pcf8563::getWeekday()
-{
-    return weekday;
-}
-
-/**
- * @brief Staus register1, set during getTime() operation
+ * @brief Staus register1, set during getTimeDate() operation
  *
  * @return byte -> Staus register1
  */
@@ -643,7 +569,7 @@ byte Rtc_Pcf8563::getStatus1()
 }
 
 /**
- * @brief Staus register2, set durung getTime(), enableAlarm(), resetAlarm() and clearAlarm() operation
+ * @brief Staus register2, set durung getTimeDate(), enableAlarm(), resetAlarm() and clearAlarm() operation
  *
  * @return byte -> Staus register2
  */

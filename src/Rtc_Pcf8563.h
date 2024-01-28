@@ -102,6 +102,16 @@
 #define SQW_32HZ B10000010
 #define SQW_1HZ B10000011
 
+typedef struct {
+    byte Second;
+    byte Minute;
+    byte Hour;
+    byte Weekday;
+    byte Day;
+    byte Month;
+    byte Year;
+} pcfTime;
+
 /* arduino class */
 class Rtc_Pcf8563 {
 public:
@@ -110,9 +120,8 @@ public:
     void initClock(); /* zero out all values, disable all alarms */
     void clearStatus(); /* set both status bytes to zero */
 
-    void getDate(); /* get date vals to local vars */
+    pcfTime getTimeDate(); /* get date vals to local vars */
     void setDate(byte day, byte weekday, byte month, byte century, byte year);
-    void getTime(); /* get time vars + 2 status bytes to local vars */
     void getAlarm();
     void setTime(byte sec, byte minute, byte hour);
     byte readStatus2();
@@ -126,13 +135,6 @@ public:
     void setSquareWave(byte frequency);
     void clearSquareWave();
 
-    byte getSecond();
-    byte getMinute();
-    byte getHour();
-    byte getDay();
-    byte getMonth();
-    byte getYear();
-    byte getWeekday();
     byte getStatus1();
     byte getStatus2();
 
@@ -152,14 +154,8 @@ private:
     /* methods */
     byte decToBcd(byte value);
     byte bcdToDec(byte value);
-    /* time variables */
-    byte hour;
-    byte minute;
-    byte sec;
-    byte day;
-    byte weekday;
-    byte month;
-    byte year;
+    /* time variable */
+    pcfTime time;
     /* alarm */
     byte alarm_hour;
     byte alarm_minute;
