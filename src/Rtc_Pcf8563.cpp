@@ -58,36 +58,38 @@
 #include "WProgram.h"
 #endif
 
-#include <Wire.h>
+
 #include "Rtc_Pcf8563.h"
 
-Rtc_Pcf8563::Rtc_Pcf8563(void)
-{
-    Wire.begin();
-    Rtcc_Addr = RTCC_R>>1;  
-}
+Rtc_Pcf8563::Rtc_Pcf8563(WireBase& wire) :WW(wire)
+    {
+    WW.begin();
+    Rtcc_Addr = RTCC_R >> 1;
+    }
+
+Rtc_Pcf8563::Rtc_Pcf8563() :Rtc_Pcf8563(Wire) {};
 
 void Rtc_Pcf8563::initClock()
 {     
-  Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-  Wire.send(0x0);       // start address
+  WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+  WW.send(0x0);       // start address
     
-  Wire.send(0x0);   //control/status1
-  Wire.send(0x0);   //control/status2
-  Wire.send(0x01);  //set seconds
-  Wire.send(0x01);  //set minutes
-  Wire.send(0x01);  //set hour
-  Wire.send(0x01);  //set day
-  Wire.send(0x01);  //set weekday
-  Wire.send(0x01);  //set month, century to 1
-  Wire.send(0x01);  //set year to 99
-  Wire.send(0x80);  //minute alarm value reset to 00
-  Wire.send(0x80);  //hour alarm value reset to 00
-  Wire.send(0x80);  //day alarm value reset to 00
-  Wire.send(0x80);  //weekday alarm value reset to 00
-  Wire.send(0x0);   //set SQW, see: setSquareWave
-  Wire.send(0x0);   //timer off
-  Wire.endTransmission();
+  WW.send(0x0);   //control/status1
+  WW.send(0x0);   //control/status2
+  WW.send(0x01);  //set seconds
+  WW.send(0x01);  //set minutes
+  WW.send(0x01);  //set hour
+  WW.send(0x01);  //set day
+  WW.send(0x01);  //set weekday
+  WW.send(0x01);  //set month, century to 1
+  WW.send(0x01);  //set year to 99
+  WW.send(0x80);  //minute alarm value reset to 00
+  WW.send(0x80);  //hour alarm value reset to 00
+  WW.send(0x80);  //day alarm value reset to 00
+  WW.send(0x80);  //weekday alarm value reset to 00
+  WW.send(0x0);   //set SQW, see: setSquareWave
+  WW.send(0x0);   //timer off
+  WW.endTransmission();
   
 }
 
@@ -105,22 +107,22 @@ byte Rtc_Pcf8563::bcdToDec(byte val)
 
 void Rtc_Pcf8563::clearStatus()
 {
-  Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-    Wire.send(0x0);
-  Wire.send(0x0);               //control/status1
-  Wire.send(0x0);               //control/status2
-  Wire.endTransmission();  
+  WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+    WW.send(0x0);
+  WW.send(0x0);               //control/status1
+  WW.send(0x0);               //control/status2
+  WW.endTransmission();  
 }
 
 void Rtc_Pcf8563::setTime(byte hour, byte minute, byte sec)
 {
-  Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-  Wire.send(RTCC_SEC_ADDR);     // send addr low byte, req'd
+  WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+  WW.send(RTCC_SEC_ADDR);     // send addr low byte, req'd
 
-  Wire.send(decToBcd(sec));         //set seconds
-  Wire.send(decToBcd(minute));  //set minutes
-  Wire.send(decToBcd(hour));        //set hour
-    Wire.endTransmission();
+  WW.send(decToBcd(sec));         //set seconds
+  WW.send(decToBcd(minute));  //set minutes
+  WW.send(decToBcd(hour));        //set hour
+    WW.endTransmission();
    
 }
 
@@ -138,13 +140,13 @@ void Rtc_Pcf8563::setDate(byte day, byte weekday, byte mon, byte century, byte y
     else {
         month &= ~RTCC_CENTURY_MASK;
     }
-    Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-    Wire.send(RTCC_DAY_ADDR);
-    Wire.send(decToBcd(day));            //set day
-    Wire.send(decToBcd(weekday));    //set weekday
-    Wire.send(month);                         //set month, century to 1
-    Wire.send(decToBcd(year));        //set year to 99
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+    WW.send(RTCC_DAY_ADDR);
+    WW.send(decToBcd(day));            //set day
+    WW.send(decToBcd(weekday));    //set weekday
+    WW.send(month);                         //set month, century to 1
+    WW.send(decToBcd(year));        //set year to 99
+    WW.endTransmission();
 }
 
 /* enable alarm interrupt
@@ -160,10 +162,10 @@ void Rtc_Pcf8563::enableAlarm()
     status2 |= RTCC_ALARM_AIE;
 
     //enable the interrupt
-    Wire.beginTransmission(Rtcc_Addr);  // Issue I2C start signal
-    Wire.send(RTCC_STAT2_ADDR);
-    Wire.send(status2);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);  // Issue I2C start signal
+    WW.send(RTCC_STAT2_ADDR);
+    WW.send(status2);
+    WW.endTransmission();
 }
 
 
@@ -174,12 +176,12 @@ void Rtc_Pcf8563::enableAlarm()
 byte Rtc_Pcf8563::readStatus2()
 {
     /* set the start byte of the status 2 data */
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_STAT2_ADDR);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_STAT2_ADDR);
+    WW.endTransmission();
 
-    Wire.requestFrom(Rtcc_Addr, 1); //request 1 bytes
-    return Wire.read();
+    WW.requestFrom(Rtcc_Addr, 1); //request 1 bytes
+    return WW.read();
 }
 
 /*
@@ -241,13 +243,13 @@ void Rtc_Pcf8563::setAlarm(byte min, byte hour, byte day, byte weekday)
     Rtc_Pcf8563::enableAlarm();
 
     //TODO bounds check  the inputs first
-    Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-    Wire.send(RTCC_ALRM_MIN_ADDR);
-    Wire.send(min);                //minute alarm value reset to 00
-    Wire.send(hour);                //hour alarm value reset to 00
-    Wire.send(day);                //day alarm value reset to 00
-    Wire.send(weekday);            //weekday alarm value reset to 00
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+    WW.send(RTCC_ALRM_MIN_ADDR);
+    WW.send(min);                //minute alarm value reset to 00
+    WW.send(hour);                //hour alarm value reset to 00
+    WW.send(day);                //day alarm value reset to 00
+    WW.send(weekday);            //weekday alarm value reset to 00
+    WW.endTransmission();
 }
 
 /**
@@ -256,30 +258,30 @@ void Rtc_Pcf8563::setAlarm(byte min, byte hour, byte day, byte weekday)
 void Rtc_Pcf8563::getAlarm()
 {
     /* set the start byte of the alarm data */
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_ALRM_MIN_ADDR);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_ALRM_MIN_ADDR);
+    WW.endTransmission();
 
-    Wire.requestFrom(Rtcc_Addr, 4); //request 4 bytes
-    alarm_minute = Wire.read();
+    WW.requestFrom(Rtcc_Addr, 4); //request 4 bytes
+    alarm_minute = WW.read();
     if(B10000000 & alarm_minute){
         alarm_minute = RTCC_NO_ALARM;
     } else {
         alarm_minute = bcdToDec(alarm_minute & B01111111);
     }
-    alarm_hour = Wire.read();
+    alarm_hour = WW.read();
     if(B10000000 & alarm_hour){
         alarm_hour = RTCC_NO_ALARM;
     } else {
         alarm_hour = bcdToDec(alarm_hour & B00111111);
     }
-    alarm_day = Wire.read();
+    alarm_day = WW.read();
     if(B10000000 & alarm_day){
         alarm_day = RTCC_NO_ALARM;
     } else {
         alarm_day = bcdToDec(alarm_day  & B00111111);
     }
-    alarm_weekday = Wire.read();
+    alarm_weekday = WW.read();
     if(B10000000 & alarm_weekday){
         alarm_weekday = RTCC_NO_ALARM;
     } else {
@@ -292,10 +294,10 @@ void Rtc_Pcf8563::getAlarm()
 */
 void Rtc_Pcf8563::setSquareWave(byte frequency)
 {
-    Wire.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
-    Wire.send(RTCC_SQW_ADDR);
-    Wire.send(frequency);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);    // Issue I2C start signal
+    WW.send(RTCC_SQW_ADDR);
+    WW.send(frequency);
+    WW.endTransmission();
 }
 
 void Rtc_Pcf8563::clearSquareWave()
@@ -310,10 +312,10 @@ void Rtc_Pcf8563::resetAlarm()
 {
     //set status2 AF val to zero to reset alarm
     status2 &= ~RTCC_ALARM_AF;
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_STAT2_ADDR);
-    Wire.send(status2);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_STAT2_ADDR);
+    WW.send(status2);
+    WW.endTransmission();
 }
 
 
@@ -324,27 +326,27 @@ void Rtc_Pcf8563::clearAlarm()
     //turn off the interrupt
     status2 &= ~RTCC_ALARM_AIE;
         
-  Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_STAT2_ADDR);
-  Wire.send(status2); 
-  Wire.endTransmission();  
+  WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_STAT2_ADDR);
+  WW.send(status2); 
+  WW.endTransmission();  
 }
 
 /* call this first to load current date values to variables */
 void Rtc_Pcf8563::getDate()
 {  
     /* set the start byte of the date data */
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_DAY_ADDR);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_DAY_ADDR);
+    WW.endTransmission();
     
-    Wire.requestFrom(Rtcc_Addr, 4); //request 4 bytes
+    WW.requestFrom(Rtcc_Addr, 4); //request 4 bytes
     //0x3f = 0b00111111
-    day = bcdToDec(Wire.receive() & 0x3f);
+    day = bcdToDec(WW.receive() & 0x3f);
     //0x07 = 0b00000111
-    weekday = bcdToDec(Wire.receive() & 0x07);
+    weekday = bcdToDec(WW.receive() & 0x07);
     //get raw month data byte and set month and century with it.
-    month = Wire.receive();
+    month = WW.receive();
     if (month & RTCC_CENTURY_MASK) {
         century = 1;
     }
@@ -354,7 +356,7 @@ void Rtc_Pcf8563::getDate()
     //0x1f = 0b00011111
     month = month & 0x1f;
     month = bcdToDec(month);
-    year = bcdToDec(Wire.receive());  
+    year = bcdToDec(WW.receive());  
 }
 
 
@@ -362,21 +364,21 @@ void Rtc_Pcf8563::getDate()
 void Rtc_Pcf8563::getTime()
 {  
     /* set the start byte , get the 2 status bytes */
-    Wire.beginTransmission(Rtcc_Addr);
-    Wire.send(RTCC_STAT1_ADDR);
-    Wire.endTransmission();
+    WW.beginTransmission(Rtcc_Addr);
+    WW.send(RTCC_STAT1_ADDR);
+    WW.endTransmission();
     
-    Wire.requestFrom(Rtcc_Addr, 5); //request 5 bytes
-    status1 = Wire.receive();
-    status2 = Wire.receive();
+    WW.requestFrom(Rtcc_Addr, 5); //request 5 bytes
+    status1 = WW.receive();
+    status2 = WW.receive();
     //0x7f = 0b01111111
-    sec = bcdToDec(Wire.receive() & 0x7f);
-    minute = bcdToDec(Wire.receive() & 0x7f);
+    sec = bcdToDec(WW.receive() & 0x7f);
+    minute = bcdToDec(WW.receive() & 0x7f);
     //0x3f = 0b00111111
-    hour = bcdToDec(Wire.receive() & 0x3f);
+    hour = bcdToDec(WW.receive() & 0x3f);
 }
 
-char *Rtc_Pcf8563::version(){
+char const *Rtc_Pcf8563::version(){
   return RTCC_VERSION;  
 }
 
