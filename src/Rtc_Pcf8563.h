@@ -107,6 +107,8 @@
 /* arduino class */
 class Rtc_Pcf8563 {
     public:
+        
+        Rtc_Pcf8563(WireBase& wire);
         Rtc_Pcf8563();
 
         void initClock();   /* zero out all values, disable all alarms */
@@ -116,7 +118,7 @@ class Rtc_Pcf8563 {
         void setDate(byte day, byte weekday, byte month, byte century, byte year);
         void getTime();    /* get time vars + 2 status bytes to local vars */
         void getAlarm();
-        void setTime(byte sec, byte minute, byte hour);
+        void setTime(byte hour, byte minute, byte sec);
         byte readStatus2();
         boolean alarmEnabled();
         boolean alarmActive();
@@ -148,7 +150,7 @@ class Rtc_Pcf8563 {
         /* date supports 3 styles as listed in the wikipedia page about world date/time. */
         char *formatDate(byte style=RTCC_DATE_US);
 
-        char *version();
+        char const *version();
         
     private:
         /* methods */
@@ -176,6 +178,9 @@ class Rtc_Pcf8563 {
         char strDate[11];
 
         int Rtcc_Addr;
+        
+        WireBase& WW;  // i2c bus object reference
+        
 };
 
 #endif
